@@ -1,0 +1,25 @@
+{
+  "name": "complex-app",
+  "version": "1.0.0",
+  "description": "A Node and Mongo backend API for our React app to talk to",
+  "main": "db.js",
+  "scripts": {
+    "start": "node db",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "md5": "^2.3.0",
+    "mongodb": "^3.6.3",
+    "sanitize-html": "^2.4.0",
+    "socket.io": "^4.1.3",
+    "validator": "^13.6.0"
+  }
+}
