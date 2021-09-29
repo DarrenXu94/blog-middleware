@@ -195,15 +195,7 @@ Post.getFeed = async function (id) {
 }
 
 Post.getAllPosts = async function() {
-  return new Promise(async function (resolve, reject) {
-    
-    let posts = await postsCollection.find({}).toArray()
-    if (posts) {
-      resolve(posts)
-    } else {
-      reject()
-    }
-  })
+    return Post.reusablePostQuery([{ $match: { } }, { $sort: { createdDate: -1 } }])
 }
 
 module.exports = Post

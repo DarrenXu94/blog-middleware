@@ -173,7 +173,18 @@ User.getAllUsers = function() {
     
     let users = await usersCollection.find({},{fields: { password: 0}}).toArray()
     if (users) {
-      resolve(users)
+      const userList = []
+      for (let user of users) {
+        let userDoc = new User(user, true)
+          userDoc = {
+            _id: userDoc.data._id,
+            username: userDoc.data.username,
+            avatar: userDoc.avatar,
+            email: user.email
+          }
+          userList.push(userDoc)
+      }
+      resolve(userList)
     } else {
       resolve([])
     }
