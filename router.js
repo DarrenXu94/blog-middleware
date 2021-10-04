@@ -38,5 +38,66 @@ apiRouter.post("/removeFollow/:username", userController.apiMustBeLoggedIn, foll
 apiRouter.get("/profile", userController.getAllUsers)
 apiRouter.get("/post", postController.getAllPosts)
 
+apiRouter.post("/image", postController.postImage)
+
+
+
+const MongoClient = require('mongodb');
+
+
+
+apiRouter.get("/file/:filename", async (req, res) => {
+//     try {
+              
+//         console.log(req.params.filename)
+//         const file = await gfs.files.findOne({ filename: req.params.filename });
+//         console.log(file, "found file")
+//         const readStream = gfs.createReadStream(file.filename);
+//         readStream.pipe(res);
+//     } catch (error) {
+//         res.send("not found");
+//     }
+MongoClient.connect("mongodb://root:root@localhost:27017",{ useNewUrlParser: true, useUnifiedTopology: true }, function(err, client){
+    const fileName = req.params.filename
+    if(err){
+      return res.render('index', {title: 'Uploaded Error', message: 'MongoClient Connection error', error: err.errMsg});
+    }
+    const db = client.db("test");
+    
+    const collection = db.collection('photos.files');
+    const collectionChunks = db.collection('photos.chunks');
+    collection.find({filename: fileName}).toArray(function(err, docs){
+      if(err){
+        return res.render('index', {title: 'File error', message: 'Error finding file', error: err.errMsg});
+      }
+      if(!docs || docs.length === 0){
+        return res.render('index', {title: 'Download Error', message: 'No file found'});
+      }else{
+        //Retrieving the chunks from the db
+        collectionChunks.find({files_id : docs[0]._id}).sort({n: 1}).toArray(function(err, chunks){
+          if(err){
+            return res.render('index', {title: 'Download Error', message: 'Error retrieving chunks', error: err.errmsg});
+          }
+          if(!chunks || chunks.length === 0){
+            //No data found
+            return res.render('index', {title: 'Download Error', message: 'No data found'});
+          }
+          //Append Chunks
+          let fileData = [];
+          for(let i=0; i<chunks.length;i++){
+            //This is in Binary JSON or BSON format, which is stored
+            //in fileData array in base64 endocoded string format
+            fileData.push(chunks[i].data.toString('base64'));
+          }
+          //Display the chunks using the data URI format
+          let finalFile = 'data:' + docs[0].contentType + ';base64,' + fileData.join('');
+          res.json({title: 'Image File', message: 'Image loaded from MongoDB GridFS', imgurl: finalFile});
+        });
+      }
+      
+    });
+  });
+
+});
 
 module.exports = apiRouter

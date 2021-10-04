@@ -3,6 +3,7 @@ const followsCollection = require("../db").db().collection("follows")
 const ObjectID = require("mongodb").ObjectID
 const User = require("./User")
 const sanitizeHTML = require("sanitize-html")
+const upload = require("../middleware/upload")
 
 postsCollection.createIndex({ title: "text", body: "text" })
 
@@ -202,6 +203,24 @@ Post.getFeed = async function (id) {
 
 Post.getAllPosts = async function() {
     return Post.reusablePostQuery([{ $match: { } }, { $sort: { createdDate: -1 } }])
+}
+
+Post.postImage = async function(req,res) {
+  try {
+    await upload(req, res);
+
+    console.log(req.file);
+    if (req.file == undefined) {
+      return res.send(`You must select a file.`);
+    }
+
+    // return res.send(`File has been uploaded.`);
+    const imgUrl = `http://localhost:8080/file/${req.file.filename}`;
+    return res.send(imgUrl);
+  } catch (error) {
+    console.log(error);
+    return res.send(`Error when trying upload image: ${error}`);
+  }
 }
 
 module.exports = Post
