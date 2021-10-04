@@ -3,19 +3,19 @@ const multer = require("multer");
 const {GridFsStorage} = require("multer-gridfs-storage");
 
 var storage = new GridFsStorage({
-  url: "mongodb://root:root@localhost:27017",
+  url: process.env.CONNECTIONSTRING,
   options: { useNewUrlParser: true, useUnifiedTopology: true },
   file: (req, file) => {
     const match = ["image/png", "image/jpeg"];
 
     if (match.indexOf(file.mimetype) === -1) {
-      const filename = `${Date.now()}-bezkoder-${file.originalname}`;
+      const filename = `${Date.now()}-dx94-${file.originalname}`;
       return filename;
     }
 
     return {
       bucketName: "photos",
-      filename: `${Date.now()}-bezkoder-${file.originalname}`
+      filename: `${Date.now()}-dx94-${file.originalname}`
     };
   }
 });

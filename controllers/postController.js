@@ -73,22 +73,27 @@ exports.getAllPosts = async function(req,res) {
 }
 
 exports.postImage = async function(req,res) {
-  // const url = await Post.postImage(req, res)
-  // res(url)
-  console.log(req)
   try {
     await upload(req, res);
-
-    console.log(req.file);
     if (req.file == undefined) {
       return res.send(`You must select a file.`);
     }
 
     // return res.send(`File has been uploaded.`);
     const imgUrl = `http://localhost:8080/file/${req.file.filename}`;
-    return res.send(imgUrl);
+    return res.json(imgUrl);
   } catch (error) {
     console.log(error);
     return res.send(`Error when trying upload image: ${error}`);
+  }
+}
+
+exports.getImage = async function(req,res) {
+  try {
+
+    Post.getImage(req,res) 
+  } catch (error) {
+    console.log(error);
+    return res.send(`Error when retrieving upload image: ${error}`);
   }
 }

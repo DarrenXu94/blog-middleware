@@ -5,6 +5,9 @@ const User = require("./User")
 const sanitizeHTML = require("sanitize-html")
 const upload = require("../middleware/upload")
 
+const testCollection = require("../db").db().collection("test")
+
+
 postsCollection.createIndex({ title: "text", body: "text" })
 
 let Post = function (data, userid, requestedPostId) {
@@ -25,13 +28,16 @@ Post.prototype.cleanUp = function () {
   // get rid of any bogus properties
   this.data = {
     title: sanitizeHTML(this.data.title.trim(), { allowedTags: [], allowedAttributes: {} }),
+    selfClosing: [ 'img', 'br', 'hr', 'area', 'base', 'basefont', 'input', 'link', 'meta' ],
+
     body: sanitizeHTML(this.data.body.trim(), { allowedTags: ["address", "article", "aside", "footer", "header", "h1", "h2", "h3", "h4",
     "h5", "h6", "hgroup", "main", "nav", "section", "blockquote", "dd", "div",
     "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre",
     "ul", "a", "abbr", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn",
     "em", "i", "kbd", "mark", "q", "rb", "rp", "rt", "rtc", "ruby", "s", "samp",
     "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr", "caption",
-    "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr"], allowedAttributes: {} }),
+    "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img"], allowedAttributes: {  img: [ 'src' ]
+  } }),
     createdDate: new Date(),
     author: ObjectID(this.userid)
   }
@@ -208,8 +214,6 @@ Post.getAllPosts = async function() {
 Post.postImage = async function(req,res) {
   try {
     await upload(req, res);
-
-    console.log(req.file);
     if (req.file == undefined) {
       return res.send(`You must select a file.`);
     }
@@ -221,6 +225,47 @@ Post.postImage = async function(req,res) {
     console.log(error);
     return res.send(`Error when trying upload image: ${error}`);
   }
+}
+
+Post.getImage = async function(req,res) {
+    const fileName = req.params.filename
+
+    const collection = require("../db").db().collection('photos.files');
+    const collectionChunks = require("../db").db().collection('photos.chunks');
+    collection.find({filename: fileName}).toArray(function(err, docs){
+      if(err){
+        return res.status(500).json({title: 'File error', message: 'Error finding file', error: err.errMsg});
+      }
+      if(!docs || docs.length === 0){
+        return res.status(500).json({title: 'Download Error', message: 'No file found'});
+      }else{
+        //Retrieving the chunks from the db
+        collectionChunks.find({files_id : docs[0]._id}).sort({n: 1}).toArray(function(err, chunks){
+          if(err){
+            return res.status(500).json({title: 'Download Error', message: 'Error retrieving chunks', error: err.errmsg});
+          }
+          if(!chunks || chunks.length === 0){
+            //No data found
+            return res.status(500).json({title: 'Download Error', message: 'No data found'});
+          }
+          //Append Chunks
+          let fileData = [];
+          for(let i=0; i<chunks.length;i++){
+            //This is in Binary JSON or BSON format, which is stored
+            //in fileData array in base64 endocoded string format
+            fileData.push(chunks[i].data.toString('base64'));
+          }
+          //Display the chunks using the data URI format
+          // let finalFile = 'data:' + docs[0].contentType + ';base64,' + fileData.join('');
+          var img = Buffer.from(fileData[0], 'base64');
+
+          res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': img.length
+          });
+          res.end(img);
+        });
+      }})
 }
 
 module.exports = Post
