@@ -41,5 +41,7 @@ apiRouter.get("/post", postController.getAllPosts)
 apiRouter.post("/image", userController.apiMustBeLoggedInForm, postController.postImage)
 
 apiRouter.get("/file/:filename", postController.getImage)
+apiRouter.delete("/files", userController.apiMustBeLoggedIn, postController.deleteImages)
+
 
 module.exports = apiRouter

@@ -268,4 +268,31 @@ Post.getImage = async function(req,res) {
       }})
 }
 
+Post.deleteImages = async function(req,res) {
+  const prefix = "http://localhost:8080/file/"
+  const urls = req.body.urls
+  
+  const newUrls = urls.map(url => url.replace(prefix, ""))
+
+  const collection = require("../db").db().collection('photos.files');
+  const collectionChunks = require("../db").db().collection('photos.chunks');
+  collection.find({filename:{"$in": newUrls}}).toArray(async function(err, docs){
+    if(err){
+      return res.status(500).json({title: 'File error', message: 'Error finding file', error: err.errMsg});
+    }
+    if(!docs || docs.length === 0){
+      return res.status(500).json({title: 'Download Error', message: 'No file found'});
+    }else{
+      // Loop through results and delete
+      for (let doc of docs) {
+        const res = await collectionChunks.deleteOne({files_id: doc._id})
+      }
+      await collection.deleteMany({filename:{"$in": newUrls}})
+    }
+    res.json("Deleted")
+  })
+
+
+}
+
 module.exports = Post

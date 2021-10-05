@@ -97,3 +97,13 @@ exports.getImage = async function(req,res) {
     return res.send(`Error when retrieving upload image: ${error}`);
   }
 }
+
+exports.deleteImages = async function(req,res) {
+  try {
+
+    Post.deleteImages(req,res) 
+  } catch (error) {
+    console.log(error);
+    return res.send(`Error when deleting images: ${error}`);
+  }
+}
