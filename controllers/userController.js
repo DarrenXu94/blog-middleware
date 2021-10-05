@@ -35,6 +35,15 @@ exports.apiMustBeLoggedIn = function (req, res, next) {
   }
 }
 
+exports.apiMustBeLoggedInForm = function (req, res, next) {
+  try {
+    req.apiUser = jwt.verify(req.header("token"), process.env.JWTSECRET)
+    next()
+  } catch (e) {
+    res.status(500).send("Sorry, you must provide a valid token.")
+  }
+}
+
 exports.doesUsernameExist = function (req, res) {
   User.findByUsername(req.body.username.toLowerCase())
     .then(function () {

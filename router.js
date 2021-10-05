@@ -38,7 +38,7 @@ apiRouter.post("/removeFollow/:username", userController.apiMustBeLoggedIn, foll
 apiRouter.get("/profile", userController.getAllUsers)
 apiRouter.get("/post", postController.getAllPosts)
 
-apiRouter.post("/image", postController.postImage)
+apiRouter.post("/image", userController.apiMustBeLoggedInForm, postController.postImage)
 
 apiRouter.get("/file/:filename", postController.getImage)
 
